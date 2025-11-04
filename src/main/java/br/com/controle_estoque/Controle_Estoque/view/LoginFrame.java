@@ -88,8 +88,8 @@ public class LoginFrame extends JFrame {
 
                     dispose();
 
-                    JOptionPane.showMessageDialog(null, "Login com sucesso! Abrindo MainFrame...");
-
+                    MainFrame mainFrame = new MainFrame();
+                    mainFrame.setVisible(true);
 
                 } catch (Exception e) {
                     e.printStackTrace();
