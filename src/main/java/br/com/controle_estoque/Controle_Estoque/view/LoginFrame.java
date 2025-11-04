@@ -1,5 +1,9 @@
 package br.com.controle_estoque.Controle_Estoque.view;
 
+import br.com.controle_estoque.Controle_Estoque.auth.AuthManager;
+import br.com.controle_estoque.Controle_Estoque.client.ApiClient;
+import br.com.controle_estoque.Controle_Estoque.dto.AuthenticationResponseDTO;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -12,7 +16,11 @@ public class LoginFrame extends JFrame {
     private JButton btnEntrar;
     private JButton btnRegistrar;
 
+    private ApiClient apiClient;
+
     public LoginFrame() {
+        this.apiClient = new ApiClient();
+
         setTitle("Controle de Estoque - Login");
         setSize(400, 200);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -22,42 +30,24 @@ public class LoginFrame extends JFrame {
         JPanel mainPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 8, 8, 8);
-
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.WEST;
+        gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.WEST;
         mainPanel.add(new JLabel("Usuário:"), gbc);
-
-        gbc.gridx = 1;
-        gbc.gridy = 0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 1; gbc.gridy = 0; gbc.fill = GridBagConstraints.HORIZONTAL;
         txtUsuario = new JTextField(20);
         mainPanel.add(txtUsuario, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 1;
+        gbc.gridx = 0; gbc.gridy = 1;
         mainPanel.add(new JLabel("Senha:"), gbc);
-
-        gbc.gridx = 1;
-        gbc.gridy = 1;
+        gbc.gridx = 1; gbc.gridy = 1;
         txtSenha = new JPasswordField(20);
         mainPanel.add(txtSenha, gbc);
-
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         btnEntrar = new JButton("Entrar");
         btnRegistrar = new JButton("Registrar");
-
         getRootPane().setDefaultButton(btnEntrar);
-
         buttonPanel.add(btnEntrar);
         buttonPanel.add(btnRegistrar);
-
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        gbc.gridwidth = 2;
-        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER;
         mainPanel.add(buttonPanel, gbc);
-
         add(mainPanel);
 
         btnEntrar.addActionListener(new ActionListener() {
@@ -80,10 +70,41 @@ public class LoginFrame extends JFrame {
             return;
         }
 
-        System.out.println("Tentando logar com Usuário: " + usuario);
-        JOptionPane.showMessageDialog(this,
-                "Lógica de login com API ainda não implementada!",
-                "Aguarde",
-                JOptionPane.INFORMATION_MESSAGE);
+        btnEntrar.setEnabled(false);
+        btnEntrar.setText("Entrando...");
+
+        SwingWorker<AuthenticationResponseDTO, Void> worker = new SwingWorker<>() {
+            @Override
+            protected AuthenticationResponseDTO doInBackground() throws Exception {
+                return apiClient.login(usuario, senha);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    AuthenticationResponseDTO response = get();
+
+                    AuthManager.setToken(response.getToken());
+
+                    dispose();
+
+                    JOptionPane.showMessageDialog(null, "Login com sucesso! Abrindo MainFrame...");
+
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    AuthManager.logout();
+                    JOptionPane.showMessageDialog(LoginFrame.this,
+                            "Falha no login. Verifique usuário e senha.",
+                            "Erro de Login",
+                            JOptionPane.ERROR_MESSAGE);
+                } finally {
+                    btnEntrar.setEnabled(true);
+                    btnEntrar.setText("Entrar");
+                }
+            }
+        };
+
+        worker.execute();
     }
 }
