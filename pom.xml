@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>br.com.oaksystem</groupId>
-    <artifactId>Oak-System-Swing</artifactId>
+    <groupId>br.com.controle_estoque</groupId>
+    <artifactId>Controle_Estoque</artifactId>
     <version>1.0.0</version>
 
     <properties>
@@ -59,7 +59,7 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>br.com.oaksystem.swing.Main</mainClass>
+                                    <mainClass>br.com.controle_estoque.Controle_Estoque.Main</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
