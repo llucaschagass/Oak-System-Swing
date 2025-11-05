@@ -1,5 +1,4 @@
 package br.com.controle_estoque.Controle_Estoque.dto;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)

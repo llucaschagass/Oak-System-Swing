@@ -1,5 +1,6 @@
 package br.com.controle_estoque.Controle_Estoque.client;
 
+import br.com.controle_estoque.Controle_Estoque.auth.AuthManager;
 import br.com.controle_estoque.Controle_Estoque.dto.AuthenticationRequestDTO;
 import br.com.controle_estoque.Controle_Estoque.dto.AuthenticationResponseDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,5 +42,51 @@ public class ApiClient {
         }
 
         return objectMapper.readValue(response.body(), AuthenticationResponseDTO.class);
+    }
+
+    /**
+     * Método genérico para fazer requisições GET autenticadas.
+     * @param endpoint O endpoint da API
+     * @return A resposta da API
+     */
+    private String sendGetRequest(String endpoint) throws Exception {
+        // Verifica se tem token salvo
+        if (!AuthManager.isAuthenticated()) {
+            throw new RuntimeException("Usuário não autenticado. Faça o login novamente.");
+        }
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + endpoint))
+                .header("Authorization", "Bearer " + AuthManager.getToken())
+                .GET()
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() == 401 || response.statusCode() == 403) {
+            AuthManager.logout();
+            throw new RuntimeException("Sessão expirada. Faça o login novamente.");
+        }
+        if (response.statusCode() != 200) {
+            throw new RuntimeException("Falha ao buscar dados: " + endpoint + ". Status: " + response.statusCode());
+        }
+
+        return response.body();
+    }
+
+    public String getBalancoFinanceiro() throws Exception {
+        return sendGetRequest("/api/relatorios/balanco-financeiro");
+    }
+
+    public String getProdutosAbaixoMinimo() throws Exception {
+        return sendGetRequest("/api/relatorios/produtos-abaixo-minimo");
+    }
+
+    public String getProdutosPorCategoria() throws Exception {
+        return sendGetRequest("/api/relatorios/produtos-por-categoria");
+    }
+
+    public String getMovimentacoes() throws Exception {
+        return sendGetRequest("/api/movimentacoes");
     }
 }
