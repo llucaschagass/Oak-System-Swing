@@ -11,6 +11,8 @@ public class ProdutoDTO {
     private String unidade;
     private int quantidadeEmEstoque;
     private CategoriaDTO categoria;
+    private int quantidadeMinima;
+    private int quantidadeMaxima;
 
     // Getters e Setters
     public long getId() { return id; }
@@ -25,4 +27,17 @@ public class ProdutoDTO {
     public void setQuantidadeEmEstoque(int quantidadeEmEstoque) { this.quantidadeEmEstoque = quantidadeEmEstoque; }
     public CategoriaDTO getCategoria() { return categoria; }
     public void setCategoria(CategoriaDTO categoria) { this.categoria = categoria; }
+
+    public int getQuantidadeMinima() {
+        return quantidadeMinima;
+    }
+    public void setQuantidadeMinima(int quantidadeMinima) {
+        this.quantidadeMinima = quantidadeMinima;
+    }
+    public int getQuantidadeMaxima() {
+        return quantidadeMaxima;
+    }
+    public void setQuantidadeMaxima(int quantidadeMaxima) {
+        this.quantidadeMaxima = quantidadeMaxima;
+    }
 }

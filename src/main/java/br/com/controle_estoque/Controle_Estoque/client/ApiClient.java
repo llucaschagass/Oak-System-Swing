@@ -1,9 +1,7 @@
 package br.com.controle_estoque.Controle_Estoque.client;
 
 import br.com.controle_estoque.Controle_Estoque.auth.AuthManager;
-import br.com.controle_estoque.Controle_Estoque.dto.AuthenticationRequestDTO;
-import br.com.controle_estoque.Controle_Estoque.dto.AuthenticationResponseDTO;
-import br.com.controle_estoque.Controle_Estoque.dto.ProdutoDTO;
+import br.com.controle_estoque.Controle_Estoque.dto.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -93,11 +91,64 @@ public class ApiClient {
         return sendGetRequest("/api/movimentacoes");
     }
 
-    /**
-     * Busca a lista completa de produtos.
-     */
+    // CRUD Produtos
     public List<ProdutoDTO> getProdutos() throws Exception {
         String jsonResponse = sendGetRequest("/api/produtos");
         return objectMapper.readValue(jsonResponse, new TypeReference<List<ProdutoDTO>>() {});
+    }
+
+    public List<CategoriaDTO> getCategorias() throws Exception {
+        String jsonResponse = sendGetRequest("/api/categorias");
+        return objectMapper.readValue(jsonResponse, new TypeReference<List<CategoriaDTO>>() {});
+    }
+
+    public ProdutoDTO createProduto(ProdutoPayloadDTO produto) throws Exception {
+        String requestBody = objectMapper.writeValueAsString(produto);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/api/produtos"))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + AuthManager.getToken())
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() != 201) {
+            throw new RuntimeException("Falha ao criar produto. Status: " + response.statusCode());
+        }
+        return objectMapper.readValue(response.body(), ProdutoDTO.class);
+    }
+
+    public ProdutoDTO updateProduto(long id, ProdutoPayloadDTO produto) throws Exception {
+        String requestBody = objectMapper.writeValueAsString(produto);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/api/produtos/" + id))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + AuthManager.getToken())
+                .PUT(HttpRequest.BodyPublishers.ofString(requestBody))
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() != 200) {
+            throw new RuntimeException("Falha ao atualizar produto. Status: " + response.statusCode());
+        }
+        return objectMapper.readValue(response.body(), ProdutoDTO.class);
+    }
+
+    public void deleteProduto(long id) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/api/produtos/" + id))
+                .header("Authorization", "Bearer " + AuthManager.getToken())
+                .DELETE()
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() != 204) {
+            throw new RuntimeException("Falha ao deletar produto. Status: " + response.statusCode());
+        }
     }
 }
