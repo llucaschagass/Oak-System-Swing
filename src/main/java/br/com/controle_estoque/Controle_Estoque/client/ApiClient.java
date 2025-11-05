@@ -3,12 +3,15 @@ package br.com.controle_estoque.Controle_Estoque.client;
 import br.com.controle_estoque.Controle_Estoque.auth.AuthManager;
 import br.com.controle_estoque.Controle_Estoque.dto.AuthenticationRequestDTO;
 import br.com.controle_estoque.Controle_Estoque.dto.AuthenticationResponseDTO;
+import br.com.controle_estoque.Controle_Estoque.dto.ProdutoDTO;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 
 public class ApiClient {
 
@@ -88,5 +91,13 @@ public class ApiClient {
 
     public String getMovimentacoes() throws Exception {
         return sendGetRequest("/api/movimentacoes");
+    }
+
+    /**
+     * Busca a lista completa de produtos.
+     */
+    public List<ProdutoDTO> getProdutos() throws Exception {
+        String jsonResponse = sendGetRequest("/api/produtos");
+        return objectMapper.readValue(jsonResponse, new TypeReference<List<ProdutoDTO>>() {});
     }
 }

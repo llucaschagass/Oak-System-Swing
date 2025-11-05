@@ -23,7 +23,7 @@ public class DashboardPanel extends JPanel {
     private ApiClient apiClient;
     private ObjectMapper objectMapper;
 
-    public DashboardPanel() {
+    public DashboardPanel(ApiClient apiClient) {
         this.apiClient = new ApiClient();
         this.objectMapper = new ObjectMapper();
 
@@ -96,8 +96,7 @@ public class DashboardPanel extends JPanel {
     }
 
     /**
-     * Busca os dados da API em uma thread separada (SwingWorker)
-     * para não congelar a interface gráfica.
+     * Busca os dados da API
      */
     private void loadDashboardData() {
         SwingWorker<Void, Void> worker = new SwingWorker<>() {

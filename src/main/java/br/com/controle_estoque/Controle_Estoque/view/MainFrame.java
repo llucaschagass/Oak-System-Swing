@@ -1,6 +1,7 @@
 package br.com.controle_estoque.Controle_Estoque.view;
 
 import br.com.controle_estoque.Controle_Estoque.auth.AuthManager;
+import br.com.controle_estoque.Controle_Estoque.client.ApiClient;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,7 +14,11 @@ public class MainFrame extends JFrame {
     private JPanel contentPanel;
     private CardLayout cardLayout;
 
+    private ApiClient apiClient;
+
     public MainFrame() {
+        this.apiClient = new ApiClient();
+
         setTitle("Controle de Estoque");
         setSize(1200, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -42,8 +47,12 @@ public class MainFrame extends JFrame {
         contentPanel = new JPanel(cardLayout);
         contentPanel.setBackground(Color.WHITE);
 
-        DashboardPanel dashboardPanel = new DashboardPanel();
+        DashboardPanel dashboardPanel = new DashboardPanel(this.apiClient);
         contentPanel.add(dashboardPanel, "DASHBOARD");
+
+        ProdutosPanel produtosPanel = new ProdutosPanel(this.apiClient);
+        contentPanel.add(produtosPanel, "PRODUTOS");
+
         add(sidebarPanel, BorderLayout.WEST);
         add(contentPanel, BorderLayout.CENTER);
 
@@ -55,8 +64,10 @@ public class MainFrame extends JFrame {
         configureMenuButton(button);
 
         button.addActionListener(e -> {
-            if (text.equals("Dashboard")) {
-                cardLayout.show(contentPanel, "DASHBOARD");
+            String cardName = text.toUpperCase();
+
+            if (cardName.equals("DASHBOARD") || cardName.equals("PRODUTOS")) {
+                cardLayout.show(contentPanel, cardName);
             } else {
                 JOptionPane.showMessageDialog(this,
                         "Tela '" + text + "' ainda não implementada.",
