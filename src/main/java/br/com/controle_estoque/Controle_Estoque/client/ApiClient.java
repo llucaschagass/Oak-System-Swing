@@ -97,11 +97,6 @@ public class ApiClient {
         return objectMapper.readValue(jsonResponse, new TypeReference<List<ProdutoDTO>>() {});
     }
 
-    public List<CategoriaDTO> getCategorias() throws Exception {
-        String jsonResponse = sendGetRequest("/api/categorias");
-        return objectMapper.readValue(jsonResponse, new TypeReference<List<CategoriaDTO>>() {});
-    }
-
     public ProdutoDTO createProduto(ProdutoPayloadDTO produto) throws Exception {
         String requestBody = objectMapper.writeValueAsString(produto);
 
@@ -149,6 +144,54 @@ public class ApiClient {
 
         if (response.statusCode() != 204) {
             throw new RuntimeException("Falha ao deletar produto. Status: " + response.statusCode());
+        }
+    }
+
+    // CRUD Categorias
+    public List<CategoriaDTO> getCategorias() throws Exception {
+        String jsonResponse = sendGetRequest("/api/categorias");
+        return objectMapper.readValue(jsonResponse, new TypeReference<List<CategoriaDTO>>() {});
+    }
+
+    public CategoriaDTO createCategoria(CategoriaDTO categoria) throws Exception {
+        String requestBody = objectMapper.writeValueAsString(categoria);
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/api/categorias"))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + AuthManager.getToken())
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                .build();
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() != 201) {
+            throw new RuntimeException("Falha ao criar categoria: " + response.body());
+        }
+        return objectMapper.readValue(response.body(), CategoriaDTO.class);
+    }
+
+    public CategoriaDTO updateCategoria(long id, CategoriaDTO categoria) throws Exception {
+        String requestBody = objectMapper.writeValueAsString(categoria);
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/api/categorias/" + id))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + AuthManager.getToken())
+                .PUT(HttpRequest.BodyPublishers.ofString(requestBody))
+                .build();
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() != 200) {
+            throw new RuntimeException("Falha ao atualizar categoria: " + response.body());
+        }
+        return objectMapper.readValue(response.body(), CategoriaDTO.class);
+    }
+
+    public void deleteCategoria(long id) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/api/categorias/" + id))
+                .header("Authorization", "Bearer " + AuthManager.getToken())
+                .DELETE()
+                .build();
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() != 204) {
+            throw new RuntimeException("Falha ao deletar categoria: " + response.body());
         }
     }
 }

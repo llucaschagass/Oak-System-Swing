@@ -5,15 +5,12 @@ import br.com.controle_estoque.Controle_Estoque.client.ApiClient;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class MainFrame extends JFrame {
 
     private JPanel sidebarPanel;
     private JPanel contentPanel;
     private CardLayout cardLayout;
-
     private ApiClient apiClient;
 
     public MainFrame() {
@@ -47,11 +44,9 @@ public class MainFrame extends JFrame {
         contentPanel = new JPanel(cardLayout);
         contentPanel.setBackground(Color.WHITE);
 
-        DashboardPanel dashboardPanel = new DashboardPanel(this.apiClient);
-        contentPanel.add(dashboardPanel, "DASHBOARD");
-
-        ProdutosPanel produtosPanel = new ProdutosPanel(this.apiClient);
-        contentPanel.add(produtosPanel, "PRODUTOS");
+        contentPanel.add(new DashboardPanel(this.apiClient), "DASHBOARD");
+        contentPanel.add(new ProdutosPanel(this.apiClient), "PRODUTOS");
+        contentPanel.add(new CategoriasPanel(this.apiClient), "CATEGORIAS");
 
         add(sidebarPanel, BorderLayout.WEST);
         add(contentPanel, BorderLayout.CENTER);
@@ -66,7 +61,7 @@ public class MainFrame extends JFrame {
         button.addActionListener(e -> {
             String cardName = text.toUpperCase();
 
-            if (cardName.equals("DASHBOARD") || cardName.equals("PRODUTOS")) {
+            if (cardName.equals("DASHBOARD") || cardName.equals("PRODUTOS") || cardName.equals("CATEGORIAS")) {
                 cardLayout.show(contentPanel, cardName);
             } else {
                 JOptionPane.showMessageDialog(this,
