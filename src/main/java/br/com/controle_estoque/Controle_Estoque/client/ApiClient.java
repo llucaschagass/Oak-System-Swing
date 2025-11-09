@@ -4,6 +4,7 @@ import br.com.controle_estoque.Controle_Estoque.auth.AuthManager;
 import br.com.controle_estoque.Controle_Estoque.dto.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -20,6 +21,7 @@ public class ApiClient {
     public ApiClient() {
         this.httpClient = HttpClient.newHttpClient();
         this.objectMapper = new ObjectMapper();
+        this.objectMapper.registerModule(new JavaTimeModule());
     }
 
     /**
@@ -87,8 +89,9 @@ public class ApiClient {
         return sendGetRequest("/api/relatorios/produtos-por-categoria");
     }
 
-    public String getMovimentacoes() throws Exception {
-        return sendGetRequest("/api/movimentacoes");
+    public List<MovimentacaoDTO> getMovimentacoes() throws Exception {
+        String jsonResponse = sendGetRequest("/api/movimentacoes");
+        return objectMapper.readValue(jsonResponse, new TypeReference<List<MovimentacaoDTO>>() {});
     }
 
     // CRUD Produtos
@@ -192,6 +195,29 @@ public class ApiClient {
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() != 204) {
             throw new RuntimeException("Falha ao deletar categoria: " + response.body());
+        }
+    }
+
+    public MovimentacaoDTO createMovimentacao(MovimentacaoPayloadDTO movimentacao) throws Exception {
+        String requestBody = objectMapper.writeValueAsString(movimentacao);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/api/movimentacoes"))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + AuthManager.getToken())
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() == 201) {
+            return objectMapper.readValue(response.body(), MovimentacaoDTO.class);
+        } else {
+            String erroMsg = response.body();
+            if (erroMsg.startsWith("\"") && erroMsg.endsWith("\"")) {
+                erroMsg = erroMsg.substring(1, erroMsg.length() - 1);
+            }
+            throw new RuntimeException(erroMsg);
         }
     }
 }

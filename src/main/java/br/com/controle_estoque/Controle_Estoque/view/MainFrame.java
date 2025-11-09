@@ -47,6 +47,7 @@ public class MainFrame extends JFrame {
         contentPanel.add(new DashboardPanel(this.apiClient), "DASHBOARD");
         contentPanel.add(new ProdutosPanel(this.apiClient), "PRODUTOS");
         contentPanel.add(new CategoriasPanel(this.apiClient), "CATEGORIAS");
+        contentPanel.add(new MovimentacoesPanel(this.apiClient), "MOVIMENTAÇÕES");
 
         add(sidebarPanel, BorderLayout.WEST);
         add(contentPanel, BorderLayout.CENTER);
@@ -61,7 +62,11 @@ public class MainFrame extends JFrame {
         button.addActionListener(e -> {
             String cardName = text.toUpperCase();
 
-            if (cardName.equals("DASHBOARD") || cardName.equals("PRODUTOS") || cardName.equals("CATEGORIAS")) {
+            if (cardName.equals("DASHBOARD") ||
+                    cardName.equals("PRODUTOS") ||
+                    cardName.equals("CATEGORIAS") ||
+                    cardName.equals("MOVIMENTAÇÕES")) {
+
                 cardLayout.show(contentPanel, cardName);
             } else {
                 JOptionPane.showMessageDialog(this,

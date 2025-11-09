@@ -126,7 +126,7 @@ public class DashboardPanel extends JPanel {
                         totalProd += cat.getQuantidadeProdutos();
                     }
                     totalProdutos = String.valueOf(totalProd);
-                    String movsJson = apiClient.getMovimentacoes();
+                    String movsJson = apiClient.getMovimentacoes().toString();
                     List<Object> listaMovs = objectMapper.readValue(movsJson, new TypeReference<>() {});
                     totalMovs = String.valueOf(listaMovs.size());
 
