@@ -3,11 +3,23 @@ package br.com.controle_estoque.Controle_Estoque.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.math.BigDecimal;
 
+/**
+ * DTO para representar os dados do Relatório de Lista de Preços.
+ * Recebe dados do endpoint /api/relatorios/lista-de-precos.
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ListaPrecoDTO {
+
+    /** O nome de exibição do produto. */
     private String nomeProduto;
+
+    /** O preço de venda unitário do produto. */
     private BigDecimal precoUnitario;
+
+    /** A unidade de medida do produto (ex: "UN", "KG"). */
     private String unidade;
+
+    /** O nome da categoria à qual o produto pertence. */
     private String nomeCategoria;
 
     // Getters e Setters
