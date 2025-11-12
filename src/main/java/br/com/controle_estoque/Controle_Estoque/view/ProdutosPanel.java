@@ -8,6 +8,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
@@ -36,13 +37,26 @@ public class ProdutosPanel extends JPanel {
         lblTitulo.setFont(UIManager.getFont("h1.font"));
         headerPanel.add(lblTitulo, BorderLayout.WEST);
 
+        JPanel headerButtonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        headerButtonsPanel.setBackground(Color.WHITE);
+
+        JButton btnReajustar = new JButton("Reajustar Preços");
+        btnReajustar.setFont(UIManager.getFont("Label.font").deriveFont(Font.BOLD));
+        btnReajustar.setBackground(new Color(230, 230, 230));
+        btnReajustar.setForeground(Color.BLACK);
+        btnReajustar.setFocusPainted(false);
+        btnReajustar.addActionListener(e -> onReajustarPrecos());
+
         JButton btnAdicionar = new JButton("+ Adicionar Produto");
         btnAdicionar.setFont(UIManager.getFont("h4.font"));
         btnAdicionar.setBackground(new Color(0x650f0f));
         btnAdicionar.setForeground(Color.WHITE);
         btnAdicionar.setFocusPainted(false);
         btnAdicionar.addActionListener(e -> onAddProduto());
-        headerPanel.add(btnAdicionar, BorderLayout.EAST);
+
+        headerButtonsPanel.add(btnReajustar);
+        headerButtonsPanel.add(btnAdicionar);
+        headerPanel.add(headerButtonsPanel, BorderLayout.EAST);
 
         add(headerPanel, BorderLayout.NORTH);
 
@@ -193,6 +207,66 @@ public class ProdutosPanel extends JPanel {
                 }
             };
             worker.execute();
+        }
+    }
+
+    private void onReajustarPrecos() {
+        String input = JOptionPane.showInputDialog(
+                this,
+                "Digite o percentual de reajuste (ex: 10 para aumento, -5 para desconto):",
+                "Reajuste de Preço em Massa",
+                JOptionPane.PLAIN_MESSAGE
+        );
+
+        if (input == null || input.trim().isEmpty()) {
+            return;
+        }
+
+        try {
+            BigDecimal percentual = new BigDecimal(input.trim().replace(",", "."));
+
+            int confirm = JOptionPane.showConfirmDialog(
+                    this,
+                    "Tem certeza que deseja aplicar um reajuste de " + percentual + "% em TODOS os produtos?",
+                    "Confirmação",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE
+            );
+
+            if (confirm != JOptionPane.YES_OPTION) {
+                return;
+            }
+
+            JButton btnReajustar = (JButton) ((JPanel) ((JPanel) getComponent(0)).getComponent(1)).getComponent(0);
+            btnReajustar.setText("Reajustando...");
+            btnReajustar.setEnabled(false);
+
+            SwingWorker<Void, Void> worker = new SwingWorker<>() {
+                @Override
+                protected Void doInBackground() throws Exception {
+                    apiClient.reajustarPrecos(percentual);
+                    return null;
+                }
+
+                @Override
+                protected void done() {
+                    try {
+                        get();
+                        JOptionPane.showMessageDialog(ProdutosPanel.this, "Preços reajustados com sucesso!");
+                        loadInitialData();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        JOptionPane.showMessageDialog(ProdutosPanel.this, "Erro ao reajustar preços: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+                    } finally {
+                        btnReajustar.setText("Reajustar Preços");
+                        btnReajustar.setEnabled(true);
+                    }
+                }
+            };
+            worker.execute();
+
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Valor inválido. Por favor, insira apenas números (ex: 10 ou -5.5).", "Erro de Formato", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

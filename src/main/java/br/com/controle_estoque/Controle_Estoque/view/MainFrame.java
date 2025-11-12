@@ -32,7 +32,6 @@ public class MainFrame extends JFrame {
         sidebarPanel.add(createMenuButton("Categorias"));
         sidebarPanel.add(createMenuButton("Movimentações"));
         sidebarPanel.add(createMenuButton("Relatórios"));
-        sidebarPanel.add(createMenuButton("Relatórios"));
 
         sidebarPanel.add(Box.createVerticalGlue());
 

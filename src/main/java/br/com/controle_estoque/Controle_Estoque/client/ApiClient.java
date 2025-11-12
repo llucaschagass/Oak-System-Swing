@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -232,5 +233,23 @@ public class ApiClient {
     public List<ListaPrecoDTO> getListaDePrecos() throws Exception {
         String jsonResponse = sendGetRequest("/api/relatorios/lista-de-precos");
         return objectMapper.readValue(jsonResponse, new TypeReference<List<ListaPrecoDTO>>() {});
+    }
+
+    public void reajustarPrecos(BigDecimal percentual) throws Exception {
+        ReajustePrecoDTO payload = new ReajustePrecoDTO(percentual);
+        String requestBody = objectMapper.writeValueAsString(payload);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/api/produtos/reajustar-preco"))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + AuthManager.getToken())
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() != 200) {
+            throw new RuntimeException("Falha ao reajustar preços. Status: " + response.statusCode());
+        }
     }
 }
