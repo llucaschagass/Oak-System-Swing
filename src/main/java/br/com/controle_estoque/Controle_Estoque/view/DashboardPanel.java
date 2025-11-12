@@ -2,6 +2,8 @@ package br.com.controle_estoque.Controle_Estoque.view;
 
 import br.com.controle_estoque.Controle_Estoque.client.ApiClient;
 import br.com.controle_estoque.Controle_Estoque.dto.BalancoGeralDTO;
+import br.com.controle_estoque.Controle_Estoque.dto.MovimentacaoDTO;
+import br.com.controle_estoque.Controle_Estoque.dto.ProdutoAbaixoMinimoDTO;
 import br.com.controle_estoque.Controle_Estoque.dto.ProdutosPorCategoriaDTO;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -109,25 +111,22 @@ public class DashboardPanel extends JPanel {
             @Override
             protected Void doInBackground() throws Exception {
                 try {
-                    String balancoJson = apiClient.getBalancoFinanceiro();
-                    BalancoGeralDTO balanco = objectMapper.readValue(balancoJson, BalancoGeralDTO.class);
+                    BalancoGeralDTO balanco = apiClient.getBalancoFinanceiro();
                     Locale br = new Locale("pt", "BR");
                     NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(br);
                     valorEstoque = currencyFormat.format(balanco.getValorTotalEstoque());
 
-                    String abaixoMinimoJson = apiClient.getProdutosAbaixoMinimo();
-                    List<Object> listaAbaixo = objectMapper.readValue(abaixoMinimoJson, new TypeReference<>() {});
+                    List<ProdutoAbaixoMinimoDTO> listaAbaixo = apiClient.getProdutosAbaixoMinimo();
                     abaixoMinimo = String.valueOf(listaAbaixo.size());
 
-                    String porCategoriaJson = apiClient.getProdutosPorCategoria();
-                    List<ProdutosPorCategoriaDTO> listaCat = objectMapper.readValue(porCategoriaJson, new TypeReference<>() {});
+                    List<ProdutosPorCategoriaDTO> listaCat = apiClient.getProdutosPorCategoria();
                     long totalProd = 0;
                     for (ProdutosPorCategoriaDTO cat : listaCat) {
                         totalProd += cat.getQuantidadeProdutos();
                     }
                     totalProdutos = String.valueOf(totalProd);
-                    String movsJson = apiClient.getMovimentacoes().toString();
-                    List<Object> listaMovs = objectMapper.readValue(movsJson, new TypeReference<>() {});
+
+                    List<MovimentacaoDTO> listaMovs = apiClient.getMovimentacoes();
                     totalMovs = String.valueOf(listaMovs.size());
 
                 } catch (Exception e) {

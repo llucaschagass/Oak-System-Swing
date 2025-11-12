@@ -32,6 +32,7 @@ public class MainFrame extends JFrame {
         sidebarPanel.add(createMenuButton("Categorias"));
         sidebarPanel.add(createMenuButton("Movimentações"));
         sidebarPanel.add(createMenuButton("Relatórios"));
+        sidebarPanel.add(createMenuButton("Relatórios"));
 
         sidebarPanel.add(Box.createVerticalGlue());
 
@@ -48,6 +49,7 @@ public class MainFrame extends JFrame {
         contentPanel.add(new ProdutosPanel(this.apiClient), "PRODUTOS");
         contentPanel.add(new CategoriasPanel(this.apiClient), "CATEGORIAS");
         contentPanel.add(new MovimentacoesPanel(this.apiClient), "MOVIMENTAÇÕES");
+        contentPanel.add(new RelatoriosPanel(this.apiClient), "RELATÓRIOS");
 
         add(sidebarPanel, BorderLayout.WEST);
         add(contentPanel, BorderLayout.CENTER);
@@ -65,7 +67,8 @@ public class MainFrame extends JFrame {
             if (cardName.equals("DASHBOARD") ||
                     cardName.equals("PRODUTOS") ||
                     cardName.equals("CATEGORIAS") ||
-                    cardName.equals("MOVIMENTAÇÕES")) {
+                    cardName.equals("MOVIMENTAÇÕES") ||
+                    cardName.equals("RELATÓRIOS")){
 
                 cardLayout.show(contentPanel, cardName);
             } else {

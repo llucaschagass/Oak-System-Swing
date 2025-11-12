@@ -77,16 +77,19 @@ public class ApiClient {
         return response.body();
     }
 
-    public String getBalancoFinanceiro() throws Exception {
-        return sendGetRequest("/api/relatorios/balanco-financeiro");
+    public BalancoGeralDTO getBalancoFinanceiro() throws Exception {
+        String jsonResponse = sendGetRequest("/api/relatorios/balanco-financeiro");
+        return objectMapper.readValue(jsonResponse, BalancoGeralDTO.class);
     }
 
-    public String getProdutosAbaixoMinimo() throws Exception {
-        return sendGetRequest("/api/relatorios/produtos-abaixo-minimo");
+    public List<ProdutoAbaixoMinimoDTO> getProdutosAbaixoMinimo() throws Exception {
+        String jsonResponse = sendGetRequest("/api/relatorios/produtos-abaixo-minimo");
+        return objectMapper.readValue(jsonResponse, new TypeReference<List<ProdutoAbaixoMinimoDTO>>() {});
     }
 
-    public String getProdutosPorCategoria() throws Exception {
-        return sendGetRequest("/api/relatorios/produtos-por-categoria");
+    public List<ProdutosPorCategoriaDTO> getProdutosPorCategoria() throws Exception {
+        String jsonResponse = sendGetRequest("/api/relatorios/produtos-por-categoria");
+        return objectMapper.readValue(jsonResponse, new TypeReference<List<ProdutosPorCategoriaDTO>>() {});
     }
 
     public List<MovimentacaoDTO> getMovimentacoes() throws Exception {
@@ -219,5 +222,15 @@ public class ApiClient {
             }
             throw new RuntimeException(erroMsg);
         }
+    }
+
+    public RelatorioMovimentacaoDTO getMaioresMovimentacoes() throws Exception {
+        String jsonResponse = sendGetRequest("/api/relatorios/maiores-movimentacoes");
+        return objectMapper.readValue(jsonResponse, RelatorioMovimentacaoDTO.class);
+    }
+
+    public List<ListaPrecoDTO> getListaDePrecos() throws Exception {
+        String jsonResponse = sendGetRequest("/api/relatorios/lista-de-precos");
+        return objectMapper.readValue(jsonResponse, new TypeReference<List<ListaPrecoDTO>>() {});
     }
 }
