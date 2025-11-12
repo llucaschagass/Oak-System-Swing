@@ -16,23 +16,44 @@ import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Painel de exibição do Dashboard principal.
+ * Exibe os principais KPIs (Indicadores Chave de Desempenho) do sistema.
+ */
 public class DashboardPanel extends JPanel {
 
+    /** Label para exibir o número total de produtos. */
     private JLabel lblValorTotalProdutos;
+
+    /** Label para exibir o valor monetário total do estoque. */
     private JLabel lblValorTotalEstoque;
+
+    /** Label para exibir a contagem de produtos abaixo do mínimo. */
     private JLabel lblValorAbaixoMinimo;
+
+    /** Label para exibir o total de movimentações. */
     private JLabel lblValorMovimentacoes;
+
+    /** Cliente para comunicação com a API. */
     private ApiClient apiClient;
+
+    /** Conversor de JSON (usado se o ApiClient retornar String). */
     private ObjectMapper objectMapper;
 
+    /**
+     * Constrói o painel do Dashboard.
+     *
+     * @param apiClient A instância do cliente de API.
+     */
     public DashboardPanel(ApiClient apiClient) {
-        this.apiClient = new ApiClient();
+        this.apiClient = apiClient;
         this.objectMapper = new ObjectMapper();
 
         setLayout(new BorderLayout());
         setBorder(new EmptyBorder(25, 30, 25, 30));
         setBackground(Color.WHITE);
 
+        // --- Cabeçalho ---
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(Color.WHITE);
         headerPanel.setBorder(new EmptyBorder(0, 0, 30, 0));
@@ -48,6 +69,7 @@ public class DashboardPanel extends JPanel {
 
         add(headerPanel, BorderLayout.NORTH);
 
+        // --- Grid de KPIs ---
         JPanel kpiGridPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 20));
         kpiGridPanel.setBackground(Color.WHITE);
 
@@ -70,6 +92,10 @@ public class DashboardPanel extends JPanel {
         loadDashboardData();
     }
 
+    /**
+     * Cria um JLabel padrão para os valores dos KPIs.
+     * @return Um JLabel com o texto "Carregando...".
+     */
     private JLabel createValorLabel() {
         JLabel label = new JLabel("Carregando...");
         label.setFont(UIManager.getFont("h1.font").deriveFont(32f));
@@ -77,6 +103,14 @@ public class DashboardPanel extends JPanel {
         return label;
     }
 
+    /**
+     * Cria um painel de card estilizado para um KPI.
+     *
+     * @param titulo O título do card.
+     * @param lblValor O JLabel que exibirá o valor (para atualização futura).
+     * @param corIndicador A cor da borda esquerda.
+     * @return Um JPanel estilizado como um card.
+     */
     private JPanel createKpiCard(String titulo, JLabel lblValor, Color corIndicador) {
         JPanel card = new JPanel(new BorderLayout(0, 5));
         card.setBackground(Color.WHITE);
@@ -98,27 +132,35 @@ public class DashboardPanel extends JPanel {
     }
 
     /**
-     * Busca os dados da API
+     * Busca os dados dos 4 relatórios da API em segundo plano (SwingWorker)
+     * e atualiza os JLabels dos cards quando a busca termina.
      */
     private void loadDashboardData() {
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
 
+            // Variáveis para armazenar os resultados
             private String totalProdutos = "Erro";
             private String valorEstoque = "Erro";
             private String abaixoMinimo = "Erro";
             private String totalMovs = "Erro";
 
+            /**
+             * Executa as chamadas de API em background.
+             */
             @Override
             protected Void doInBackground() throws Exception {
                 try {
+                    // Busca 1: Balanço Financeiro
                     BalancoGeralDTO balanco = apiClient.getBalancoFinanceiro();
                     Locale br = new Locale("pt", "BR");
                     NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(br);
                     valorEstoque = currencyFormat.format(balanco.getValorTotalEstoque());
 
+                    // Busca 2: Produtos Abaixo do Mínimo
                     List<ProdutoAbaixoMinimoDTO> listaAbaixo = apiClient.getProdutosAbaixoMinimo();
                     abaixoMinimo = String.valueOf(listaAbaixo.size());
 
+                    // Busca 3: Total de Produtos
                     List<ProdutosPorCategoriaDTO> listaCat = apiClient.getProdutosPorCategoria();
                     long totalProd = 0;
                     for (ProdutosPorCategoriaDTO cat : listaCat) {
@@ -126,6 +168,7 @@ public class DashboardPanel extends JPanel {
                     }
                     totalProdutos = String.valueOf(totalProd);
 
+                    // Busca 4: Total de Movimentações
                     List<MovimentacaoDTO> listaMovs = apiClient.getMovimentacoes();
                     totalMovs = String.valueOf(listaMovs.size());
 
@@ -135,6 +178,10 @@ public class DashboardPanel extends JPanel {
                 return null;
             }
 
+            /**
+             * Executa na thread da UI após o 'doInBackground' terminar.
+             * Atualiza os JLabels com os valores encontrados.
+             */
             @Override
             protected void done() {
                 lblValorTotalProdutos.setText(totalProdutos);

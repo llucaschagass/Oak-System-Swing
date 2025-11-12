@@ -68,6 +68,42 @@ public class ApiClient {
     }
 
     /**
+     * Registra um novo usuário na API e retorna um token de autenticação.
+     * Assume que o back-end faz o login automaticamente após o registro.
+     *
+     * @param registerRequest DTO contendo os dados do novo usuário.
+     * @return Um {@link AuthenticationResponseDTO} contendo o token JWT.
+     * @throws Exception Se o registro falhar (ex: usuário ou email já existe).
+     */
+    public AuthenticationResponseDTO register(RegisterRequestDTO registerRequest) throws Exception {
+        // Converte o objeto Java para JSON
+        String requestBody = objectMapper.writeValueAsString(registerRequest);
+
+        // Monta a requisição POST
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/api/auth/register"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                .build();
+
+        // Envia a requisição
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        // O back-end retorna 200 OK no registro (assim como no login)
+        if (response.statusCode() != 200) {
+            // Tenta extrair a mensagem de erro do back-end
+            String erroMsg = response.body();
+            if (erroMsg.startsWith("\"") && erroMsg.endsWith("\"")) {
+                erroMsg = erroMsg.substring(1, erroMsg.length() - 1);
+            }
+            throw new RuntimeException("Falha no registro: " + erroMsg);
+        }
+
+        // Converte a resposta JSON (com o token) para o DTO
+        return objectMapper.readValue(response.body(), AuthenticationResponseDTO.class);
+    }
+
+    /**
      * Método auxiliar genérico para executar requisições GET autenticadas.
      * Adiciona automaticamente o token JWT salvo no {@link AuthManager}.
      * Também lida com erros de token expirado (401/403), realizando o logout.

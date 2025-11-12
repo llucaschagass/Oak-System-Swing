@@ -13,15 +13,32 @@ import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Painel de exibição e gerenciamento (CRUD) completo dos Produtos.
+ * Este painel é exibido dentro da MainFrame.
+ */
 public class ProdutosPanel extends JPanel {
 
+    /** Tabela Swing para exibir os produtos. */
     private JTable table;
+
+    /** Modelo de dados da tabela, permite adicionar/remover linhas dinamicamente. */
     private DefaultTableModel tableModel;
+
+    /** Cliente para comunicação com a API REST. */
     private ApiClient apiClient;
 
+    /** Cache local da lista de produtos vinda da API. */
     private List<ProdutoDTO> listaProdutos;
+
+    /** Cache local da lista de categorias vinda da API (usada no formulário de Adicionar/Editar). */
     private List<CategoriaDTO> listaCategorias;
 
+    /**
+     * Constrói o painel de gerenciamento de produtos.
+     *
+     * @param apiClient A instância do cliente de API (passada pela MainFrame).
+     */
     public ProdutosPanel(ApiClient apiClient) {
         this.apiClient = apiClient;
 
@@ -29,6 +46,7 @@ public class ProdutosPanel extends JPanel {
         setBorder(new EmptyBorder(25, 30, 25, 30));
         setBackground(Color.WHITE);
 
+        // --- 1. Cabeçalho (Título e Botões de Ação) ---
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(Color.WHITE);
         headerPanel.setBorder(new EmptyBorder(0, 0, 20, 0));
@@ -37,6 +55,7 @@ public class ProdutosPanel extends JPanel {
         lblTitulo.setFont(UIManager.getFont("h1.font"));
         headerPanel.add(lblTitulo, BorderLayout.WEST);
 
+        // Painel para os botões do cabeçalho (Adicionar, Reajustar)
         JPanel headerButtonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         headerButtonsPanel.setBackground(Color.WHITE);
 
@@ -60,6 +79,7 @@ public class ProdutosPanel extends JPanel {
 
         add(headerPanel, BorderLayout.NORTH);
 
+        // --- 2. Tabela de Produtos ---
         String[] colunas = {"ID", "Nome", "Preço Unitário", "Qtd. Estoque", "Unidade", "Categoria"};
 
         tableModel = new DefaultTableModel(colunas, 0) {
@@ -79,6 +99,7 @@ public class ProdutosPanel extends JPanel {
 
         add(scrollPane, BorderLayout.CENTER);
 
+        // --- 3. Painel de Ações ---
         JPanel actionsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         actionsPanel.setBackground(Color.WHITE);
 
@@ -92,9 +113,14 @@ public class ProdutosPanel extends JPanel {
 
         add(actionsPanel, BorderLayout.SOUTH);
 
+        // --- 4. Carregamento Inicial ---
         loadInitialData();
     }
 
+    /**
+     * Busca os dados iniciais (produtos e categorias) da API em segundo plano.
+     * Usa um {@link SwingWorker} para não travar a UI durante a chamada de rede.
+     */
     private void loadInitialData() {
         tableModel.setRowCount(0);
         tableModel.addRow(new Object[]{"Carregando dados...", "", "", "", "", ""});
@@ -107,6 +133,7 @@ public class ProdutosPanel extends JPanel {
             @Override
             protected Void doInBackground() throws Exception {
                 try {
+                    // Busca produtos e categorias em paralelo
                     produtos = apiClient.getProdutos();
                     categorias = apiClient.getCategorias();
                 } catch (Exception e) {
@@ -117,23 +144,29 @@ public class ProdutosPanel extends JPanel {
 
             @Override
             protected void done() {
-                tableModel.setRowCount(0);
+                tableModel.setRowCount(0); // Limpa o "Carregando..."
                 if (error != null) {
                     tableModel.addRow(new Object[]{"Falha ao carregar: " + error, "", "", "", "", ""});
                 } else {
-                    listaProdutos = produtos;
-                    listaCategorias = categorias;
-                    preencherTabela();
+                    listaProdutos = produtos; // Salva no cache local
+                    listaCategorias = categorias; // Salva no cache local
+                    preencherTabela(); // Popula a tabela
                 }
             }
         };
         worker.execute();
     }
 
+    /**
+     * Preenche a {@link JTable} com os dados da lista de produtos local.
+     * Formata o preço para a moeda local (BRL).
+     */
     private void preencherTabela() {
         tableModel.setRowCount(0);
         Locale br = new Locale("pt", "BR");
         NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(br);
+
+        if (listaProdutos == null) return;
 
         for (ProdutoDTO produto : listaProdutos) {
             tableModel.addRow(new Object[]{
@@ -147,16 +180,30 @@ public class ProdutosPanel extends JPanel {
         }
     }
 
+    /**
+     * Ação disparada pelo botão "Adicionar Produto".
+     * Abre o {@link ProdutoFormDialog} em modo de criação (passando {@code null}).
+     */
     private void onAddProduto() {
         if (listaCategorias == null) {
             JOptionPane.showMessageDialog(this, "Categorias ainda carregando. Tente novamente.", "Aguarde", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        ProdutoFormDialog dialog = new ProdutoFormDialog((Frame) SwingUtilities.getWindowAncestor(this), apiClient, listaCategorias, null, this::loadInitialData);
+        ProdutoFormDialog dialog = new ProdutoFormDialog(
+                (Frame) SwingUtilities.getWindowAncestor(this),
+                apiClient,
+                listaCategorias,
+                null, // 'null' para produto indica modo de ADIÇÃO
+                this::loadInitialData // Callback para recarregar a tabela
+        );
         dialog.setVisible(true);
     }
 
+    /**
+     * Ação disparada pelo botão "Editar Selecionado".
+     * Abre o {@link ProdutoFormDialog} em modo de edição com o produto selecionado.
+     */
     private void onEditProduto() {
         int selectedRow = table.getSelectedRow();
         if (selectedRow == -1) {
@@ -164,11 +211,23 @@ public class ProdutosPanel extends JPanel {
             return;
         }
 
+        // Pega o produto do cache local baseado na linha
         ProdutoDTO produtoSelecionado = listaProdutos.get(selectedRow);
-        ProdutoFormDialog dialog = new ProdutoFormDialog((Frame) SwingUtilities.getWindowAncestor(this), apiClient, listaCategorias, produtoSelecionado, this::loadInitialData);
+
+        ProdutoFormDialog dialog = new ProdutoFormDialog(
+                (Frame) SwingUtilities.getWindowAncestor(this),
+                apiClient,
+                listaCategorias,
+                produtoSelecionado, // Passa o produto para o modo de EDIÇÃO
+                this::loadInitialData
+        );
         dialog.setVisible(true);
     }
 
+    /**
+     * Ação disparada pelo botão "Excluir Selecionado".
+     * Pede confirmação e deleta o produto selecionado via API.
+     */
     private void onDeleteProduto() {
         int selectedRow = table.getSelectedRow();
         if (selectedRow == -1) {
@@ -197,9 +256,9 @@ public class ProdutosPanel extends JPanel {
                 @Override
                 protected void done() {
                     try {
-                        get();
+                        get(); // Verifica se houve erro
                         JOptionPane.showMessageDialog(ProdutosPanel.this, "Produto excluído com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-                        loadInitialData();
+                        loadInitialData(); // Recarrega a tabela
                     } catch (Exception e) {
                         e.printStackTrace();
                         JOptionPane.showMessageDialog(ProdutosPanel.this, "Erro ao excluir produto: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
@@ -210,6 +269,10 @@ public class ProdutosPanel extends JPanel {
         }
     }
 
+    /**
+     * Ação disparada pelo botão "Reajustar Preços".
+     * Pede um percentual ao usuário e chama a API para o reajuste em massa.
+     */
     private void onReajustarPrecos() {
         String input = JOptionPane.showInputDialog(
                 this,
@@ -219,10 +282,11 @@ public class ProdutosPanel extends JPanel {
         );
 
         if (input == null || input.trim().isEmpty()) {
-            return;
+            return; // Usuário cancelou
         }
 
         try {
+            // Permite que o usuário digite "10,5" ou "10.5"
             BigDecimal percentual = new BigDecimal(input.trim().replace(",", "."));
 
             int confirm = JOptionPane.showConfirmDialog(
@@ -237,6 +301,7 @@ public class ProdutosPanel extends JPanel {
                 return;
             }
 
+            // Pega o botão para desabilitá-lo durante a operação
             JButton btnReajustar = (JButton) ((JPanel) ((JPanel) getComponent(0)).getComponent(1)).getComponent(0);
             btnReajustar.setText("Reajustando...");
             btnReajustar.setEnabled(false);
@@ -251,9 +316,9 @@ public class ProdutosPanel extends JPanel {
                 @Override
                 protected void done() {
                     try {
-                        get();
+                        get(); // Verifica se houve erro
                         JOptionPane.showMessageDialog(ProdutosPanel.this, "Preços reajustados com sucesso!");
-                        loadInitialData();
+                        loadInitialData(); // Recarrega a tabela para mostrar os novos preços
                     } catch (Exception e) {
                         e.printStackTrace();
                         JOptionPane.showMessageDialog(ProdutosPanel.this, "Erro ao reajustar preços: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
